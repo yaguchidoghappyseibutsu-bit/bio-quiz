@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生物クイズバトル</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: linear-gradient(180deg, #0f172a, #1e293b);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      width: 92%;
+      max-width: 560px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 2;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .rules-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.1);
+      text-align: left;
+      line-height: 1.8;
+      font-size: 0.98rem;
+    }
+
+    .rules-title {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    #question {
+      font-size: 1.2rem;
+      margin: 22px 0 16px;
+      line-height: 1.7;
+    }
+
+    .choice {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 14px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      color: #0f172a;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    .choice:active {
+      transform: scale(0.98);
+    }
+
+    .choice.correct {
+      background: #86efac;
+    }
+
+    .choice.wrong {
+      background: #fca5a5;
+    }
+
+    #nextBtn, #startBtn, #restartBtn {
+      margin-top: 16px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #facc15;
+      color: #111827;
+      cursor: pointer;
+    }
+
+    #result {
+      font-size: 1.15rem;
+      margin-top: 18px;
+      line-height: 1.9;
+    }
+
+    .info {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 0.95rem;
+      opacity: 0.95;
+      flex-wrap: wrap;
+    }
+
+    #feedback {
+      margin-top: 12px;
+      min-height: 28px;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .rank {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+
+    .s-rank {
+      animation: glow 1s infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 8px rgba(250, 204, 21, 0.4);
+        transform: scale(1);
+      }
+      to {
+        box-shadow: 0 0 22px rgba(250, 204, 21, 0.95);
+        transform: scale(1.05);
+      }
+    }
+
+    #timer {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      font-weight: bold;
+    }
+
+    #timer.warning {
+      background: rgba(239, 68, 68, 0.85);
+      color: white;
+      animation: pulse 0.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    #effects {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      opacity: 0.9;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(-10vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    .firework {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: boom 0.9s ease-out forwards;
+    }
+
+    @keyframes boom {
+      0% {
+        transform: scale(0.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(8);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="effects"></div>
+
+  <div class="container">
+    <div id="startScreen">
+      <h1>生物クイズバトル</h1>
+      <p>4択問題に答えてハイスコアを目指そう！</p>
+
+      <div class="rules-box">
+        <span class="rules-title">ルール説明</span>
+        ・各問題の制限時間は <strong>15秒</strong> です。<br>
+        ・時間切れになると、その問題は <strong>不正解</strong> になります。<br>
+        ・時間切れでも、正解は表示されます。<br>
+        ・全問終了後、正解数に応じてランクが決まります。<br>
+        ・<strong>Sランクを目指そう！</strong>
+      </div>
+
+      <button id="startBtn">スタート</button>
+    </div>
+
+    <div id="quizScreen" class="hidden">
+      <div class="info">
+        <span id="questionNumber">1 / 9</span>
+        <span id="score">Score: 0</span>
+        <span id="timer">残り 15 秒</span>
+      </div>
+      <div id="question"></div>
+      <div id="choices"></div>
+      <div id="feedback"></div>
+      <button id="nextBtn" class="hidden">次へ</button>
+    </div>
+
+    <div id="resultScreen" class="hidden">
+      <h1>結果発表</h1>
+      <div id="result"></div>
+      <button id="restartBtn">もう一度遊ぶ</button>
+    </div>
+  </div>
+
+  <script>
+    const quizData = [
+      {
+        question: "ＤＮＡを含む細胞小器官として最も適切なのは？",
+        choices: ["ゴルジ体", "葉緑体", "リボソーム", "中心体"],
+        answer: 1
+      },
+      {
+        question: "DNAを主に含む細胞小器官は？",
+        choices: ["核", "液胞", "小胞体", "リソソーム"],
+        answer: 0
+      },
+      {
+        question: "光合成が行われる主な場所は？",
+        choices: ["細胞膜", "核", "葉緑体", "ゴルジ体"],
+        answer: 2
+      },
+      {
+        question: "タンパク質合成に直接関わる構造は？",
+        choices: ["リボソーム", "液胞", "リソソーム", "細胞壁"],
+        answer: 0
+      },
+      {
+        question: "植物細胞にあり、動物細胞にないものは？",
+        choices: ["細胞膜", "核", "葉緑体", "ミトコンドリア"],
+        answer: 2
+      },
+      {
+        question: "細胞骨格ではないものは？",
+        choices: ["微小管", "中間径フィラメント", "ダイニン", "アクチンフィラメント"],
+        answer: 2
+      },
+      {
+        question: "モータータンパク質でないものは？",
+        choices: ["ダイニン", "キネシン", "ミオシン", "アクチン"],
+        answer: 3
+      },
+      {
+        question: "加水分解酵素を含む細胞内消化の場は？",
+        choices: ["ミトコンドリア", "葉緑体", "リボソーム", "リソソーム"],
+        answer: 3
+      },
+      {
+        question: "生体膜を構成する主な成分は？",
+        choices: ["リン脂質", "DNA", "リン酸カルシウム", "微小管"],
+        answer: 0
+      }
+    ];
+
+    let currentQuiz = 0;
+    let score = 0;
+    let correctCount = 0;
+    let timeLeft = 15;
+    let timerId = null;
+    let answered = false;
+
+    const startScreen = document.getElementById("startScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const questionEl = document.getElementById("question");
+    const choicesEl = document.getElementById("choices");
+    const feedbackEl = document.getElementById("feedback");
+    const resultEl = document.getElementById("result");
+    const scoreEl = document.getElementById("score");
+    const questionNumberEl = document.getElementById("questionNumber");
+    const timerEl = document.getElementById("timer");
+    const effectsEl = document.getElementById("effects");
+
+    startBtn.addEventListener("click", startGame);
+    nextBtn.addEventListener("click", nextQuestion);
+    restartBtn.addEventListener("click", restartGame);
+
+    function startGame() {
+      startScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+      quizScreen.classList.remove("hidden");
+      currentQuiz = 0;
+      score = 0;
+      correctCount = 0;
+      clearEffects();
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = quizData[currentQuiz];
+      answered = false;
+      questionEl.textContent = q.question;
+      choicesEl.innerHTML = "";
+      feedbackEl.textContent = "";
+      nextBtn.classList.add("hidden");
+
+      questionNumberEl.textContent = `${currentQuiz + 1} / ${quizData.length}`;
+      scoreEl.textContent = `Score: ${score}`;
+
+      q.choices.forEach((choice, index) => {
+        const btn = document.createElement("button");
+        btn.textContent = `${index + 1}．${choice}`;
+        btn.className = "choice";
+        btn.addEventListener("click", () => selectAnswer(index));
+        choicesEl.appendChild(btn);
+      });
+
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerId);
+      timeLeft = 15;
+      updateTimerDisplay();
+
+      timerId = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          timeUp();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      timerEl.textContent = `残り ${timeLeft} 秒`;
+      if (timeLeft <= 3) {
+        timerEl.classList.add("warning");
+      } else {
+        timerEl.classList.remove("warning");
+      }
+    }
+
+    function selectAnswer(selected) {
+      if (answered) return;
+      answered = true;
+      clearInterval(timerId);
+
+      const q = quizData[currentQuiz];
+      const buttons = document.querySelectorAll(".choice");
+      buttons.forEach(btn => btn.disabled = true);
+
+      buttons.forEach((btn, index) => {
+        if (index === q.answer) {
+          btn.classList.add("correct");
+        }
+      });
+
+      if (selected === q.answer) {
+        feedbackEl.textContent = "正解！";
+        score += 10;
+        correctCount += 1;
+      } else {
+        buttons[selected].classList.add("wrong");
+        feedbackEl.textContent = `不正解… 正解は「${q.choices[q.answer]}」`;
+      }
+
+      scoreEl.textContent = `Score: ${score}`;
+      nextBtn.classList.remove("hidden");
+    }
+
+    function timeUp() {
+      if (answered) return;
+      answered = true;
+
+      const q = quizData[currentQuiz];
+      const buttons = document.querySelectorAll(".choice");
+      buttons.forEach((btn, index) => {
+        btn.disabled = true;
+        if (index === q.answer) {
+          btn.classList.add("correct");
+        }
+      });
+
+      feedbackEl.textContent = `時間切れ！ 正解は「${q.choices[q.answer]}」`;
+      nextBtn.classList.remove("hidden");
+    }
+
+    function nextQuestion() {
+      clearInterval(timerId);
+      currentQuiz++;
+      if (currentQuiz < quizData.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function getRank() {
+      const ratio = correctCount / quizData.length;
+      if (ratio === 1) return "S";
+      if (ratio >= 0.8) return "A";
+      if (ratio >= 0.6) return "B";
+      return "C";
+    }
+
+    function showResult() {
+      clearInterval(timerId);
+      quizScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+
+      const rank = getRank();
+      const resultClass = rank === "S" ? "rank s-rank" : "rank";
+
+      resultEl.innerHTML = `
+        正解数：${correctCount} / ${quizData.length}<br>
+        最終スコア：${score}<br>
+        <span class="${resultClass}">ランク：${rank}</span>
+      `;
+
+      if (rank === "S") {
+        launchCelebration();
+      }
+    }
+
+    function restartGame() {
+      clearInterval(timerId);
+      startGame();
+    }
+
+    function clearEffects() {
+      effectsEl.innerHTML = "";
+    }
+
+    function launchCelebration() {
+      clearEffects();
+      createConfettiBurst();
+      createFireworks();
+      setTimeout(createConfettiBurst, 700);
+      setTimeout(createFireworks, 1000);
+      setTimeout(createConfettiBurst, 1500);
+    }
+
+    function createConfettiBurst() {
+      const pieces = 80;
+      for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti";
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.top = `${-10 - Math.random() * 20}vh`;
+        piece.style.background = randomColor();
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+        piece.style.animationDuration = `${2.5 + Math.random() * 2}s`;
+        effectsEl.appendChild(piece);
+
+        setTimeout(() => {
+          piece.remove();
+        }, 5000);
+      }
+    }
+
+    function createFireworks() {
+      for (let i = 0; i < 12; i++) {
+        const fw = document.createElement("div");
+        fw.className = "firework";
+        fw.style.left = `${15 + Math.random() * 70}vw`;
+        fw.style.top = `${10 + Math.random() * 45}vh`;
+        fw.style.background = randomColor();
+        effectsEl.appendChild(fw);
+
+        setTimeout(() => {
+          fw.remove();
+        }, 1000);
+      }
+    }
+
+    function randomColor() {
+      const colors = ["#facc15", "#60a5fa", "#f472b6", "#34d399", "#fb7185", "#c084fc", "#ffffff"];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+  </script>
+</body>
+</html>
