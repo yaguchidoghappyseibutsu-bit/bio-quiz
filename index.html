@@ -235,6 +235,7 @@
         ・各問題の制限時間は <strong>15秒</strong> です。<br>
         ・時間切れになると、その問題は <strong>不正解</strong> になります。<br>
         ・時間切れでも、正解は表示されます。<br>
+        ・問題順は毎回シャッフルされます。<br>
         ・全問終了後、正解数に応じてランクが決まります。<br>
         ・<strong>Sランクを目指そう！</strong>
       </div>
@@ -244,7 +245,7 @@
 
     <div id="quizScreen" class="hidden">
       <div class="info">
-        <span id="questionNumber">1 / 9</span>
+        <span id="questionNumber">1 / 26</span>
         <span id="score">Score: 0</span>
         <span id="timer">残り 15 秒</span>
       </div>
@@ -262,7 +263,7 @@
   </div>
 
   <script>
-    const quizData = [
+    const originalQuizData = [
       {
         question: "ＤＮＡを含む細胞小器官として最も適切なのは？",
         choices: ["ゴルジ体", "葉緑体", "リボソーム", "中心体"],
@@ -307,9 +308,95 @@
         question: "生体膜を構成する主な成分は？",
         choices: ["リン脂質", "DNA", "リン酸カルシウム", "微小管"],
         answer: 0
+      },
+      {
+        question: "二重膜構造をもたないのは？",
+        choices: ["核", "ゴルジ体", "ミトコンドリア", "葉緑体"],
+        answer: 1
+      },
+      {
+        question: "1枚の膜で包まれているのは？",
+        choices: ["小胞体", "中心体", "リボソーム", "葉緑体"],
+        answer: 0
+      },
+      {
+        question: "ヌクレオチドに含まれていない元素は？",
+        choices: ["C", "H", "N", "S"],
+        answer: 3
+      },
+      {
+        question: "タンパク質に含まれていない元素は？",
+        choices: ["C", "H", "O", "P"],
+        answer: 3
+      },
+      {
+        question: "核酸でないものは？",
+        choices: ["DNA", "mRNA", "tRNA", "リン脂質"],
+        answer: 3
+      },
+      {
+        question: "水の性質として誤っているのは？",
+        choices: ["比熱が小さい", "物質の運搬に働く", "光合成の基質となる", "化学反応の場となる"],
+        answer: 0
+      },
+      {
+        question: "植物細胞に最も多く含まれるのは（重量比）？",
+        choices: ["水", "炭水化物", "脂質", "核酸"],
+        answer: 0
+      },
+      {
+        question: "動物細胞に最も多く含まれるのは？",
+        choices: ["水", "炭水化物", "脂質", "核酸"],
+        answer: 0
+      },
+      {
+        question: "タンパク質に使われるアミノ酸は何種類？",
+        choices: ["1", "4", "3", "20"],
+        answer: 3
+      },
+      {
+        question: "ヘモグロビンは四次構造をもつ？",
+        choices: ["もつ", "もたない"],
+        answer: 0
+      },
+      {
+        question: "タンパク質の二次構造の名称として適切なものは？",
+        choices: ["αヘリックス", "βシート", "S-S結合", "アミノ基"],
+        answer: 0
+      },
+      {
+        question: "微小管と関係がないものは？",
+        choices: ["鞭毛", "繊毛", "紡錘糸", "すべて微小管が関係する"],
+        answer: 3
+      },
+      {
+        question: "アクチンフィラメントと関係がないものは？",
+        choices: ["原形質流動", "筋収縮", "アメーバ運動", "すべてアクチンフィラメントが関係する"],
+        answer: 3
+      },
+      {
+        question: "中間径フィラメントの例は？",
+        choices: ["ケラチン", "免疫グロブリン", "ヘモグロビン", "インスリン"],
+        answer: 0
+      },
+      {
+        question: "細胞膜上に受容体があるのは？",
+        choices: ["インスリン", "糖質コルチコイド"],
+        answer: 0
+      },
+      {
+        question: "セカンドメッセンジャーとして有名な物質は？",
+        choices: ["デンプン", "cAMP", "ゴルジ体", "セルロース"],
+        answer: 1
+      },
+      {
+        question: "細胞壁をもたない細胞は？",
+        choices: ["細菌の細胞", "植物細胞", "動物細胞", "菌類の細胞"],
+        answer: 2
       }
     ];
 
+    let quizData = [];
     let currentQuiz = 0;
     let score = 0;
     let correctCount = 0;
@@ -338,7 +425,17 @@
     nextBtn.addEventListener("click", nextQuestion);
     restartBtn.addEventListener("click", restartGame);
 
+    function shuffleArray(array) {
+      const copied = [...array];
+      for (let i = copied.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copied[i], copied[j]] = [copied[j], copied[i]];
+      }
+      return copied;
+    }
+
     function startGame() {
+      quizData = shuffleArray(originalQuizData);
       startScreen.classList.add("hidden");
       resultScreen.classList.add("hidden");
       quizScreen.classList.remove("hidden");
