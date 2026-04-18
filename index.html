@@ -96,16 +96,31 @@
       background: #fca5a5;
     }
 
-    #nextBtn, #startBtn, #restartBtn {
+    .button-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
       margin-top: 16px;
+    }
+
+    #nextBtn, #startBtn, #restartBtn, #titleBtn, #resultTitleBtn {
       padding: 12px 20px;
       border: none;
       border-radius: 12px;
       font-size: 1rem;
       font-weight: bold;
+      cursor: pointer;
+    }
+
+    #startBtn, #nextBtn, #restartBtn {
       background: #facc15;
       color: #111827;
-      cursor: pointer;
+    }
+
+    #titleBtn, #resultTitleBtn {
+      background: rgba(255,255,255,0.18);
+      color: white;
     }
 
     #result {
@@ -236,29 +251,38 @@
         ・時間切れになると、その問題は <strong>不正解</strong> になります。<br>
         ・時間切れでも、正解は表示されます。<br>
         ・問題順は毎回シャッフルされます。<br>
+        ・途中でタイトルに戻ることもできます。<br>
         ・全問終了後、正解数に応じてランクが決まります。<br>
         ・<strong>Sランクを目指そう！</strong>
       </div>
 
-      <button id="startBtn">スタート</button>
+      <div class="button-row">
+        <button id="startBtn">スタート</button>
+      </div>
     </div>
 
     <div id="quizScreen" class="hidden">
       <div class="info">
-        <span id="questionNumber">1 / 26</span>
+        <span id="questionNumber">1 / 28</span>
         <span id="score">Score: 0</span>
         <span id="timer">残り 15 秒</span>
       </div>
       <div id="question"></div>
       <div id="choices"></div>
       <div id="feedback"></div>
-      <button id="nextBtn" class="hidden">次へ</button>
+      <div class="button-row">
+        <button id="nextBtn" class="hidden">次へ</button>
+        <button id="titleBtn">タイトルに戻る</button>
+      </div>
     </div>
 
     <div id="resultScreen" class="hidden">
       <h1>結果発表</h1>
       <div id="result"></div>
-      <button id="restartBtn">もう一度遊ぶ</button>
+      <div class="button-row">
+        <button id="restartBtn">もう一度遊ぶ</button>
+        <button id="resultTitleBtn">タイトルに戻る</button>
+      </div>
     </div>
   </div>
 
@@ -393,6 +417,16 @@
         question: "細胞壁をもたない細胞は？",
         choices: ["細菌の細胞", "植物細胞", "動物細胞", "菌類の細胞"],
         answer: 2
+      },
+      {
+        question: "リボソームが付着している小胞体は？",
+        choices: ["滑面小胞体", "粗面小胞体"],
+        answer: 1
+      },
+      {
+        question: "コネクソンという円筒状のタンパク質による結合は？",
+        choices: ["密着結合", "ギャップ結合", "デスモソーム"],
+        answer: 1
       }
     ];
 
@@ -411,6 +445,8 @@
     const startBtn = document.getElementById("startBtn");
     const nextBtn = document.getElementById("nextBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const titleBtn = document.getElementById("titleBtn");
+    const resultTitleBtn = document.getElementById("resultTitleBtn");
 
     const questionEl = document.getElementById("question");
     const choicesEl = document.getElementById("choices");
@@ -424,6 +460,8 @@
     startBtn.addEventListener("click", startGame);
     nextBtn.addEventListener("click", nextQuestion);
     restartBtn.addEventListener("click", restartGame);
+    titleBtn.addEventListener("click", returnToTitle);
+    resultTitleBtn.addEventListener("click", returnToTitle);
 
     function shuffleArray(array) {
       const copied = [...array];
@@ -444,6 +482,18 @@
       correctCount = 0;
       clearEffects();
       showQuestion();
+    }
+
+    function returnToTitle() {
+      clearInterval(timerId);
+      clearEffects();
+      quizScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+      startScreen.classList.remove("hidden");
+      nextBtn.classList.add("hidden");
+      feedbackEl.textContent = "";
+      choicesEl.innerHTML = "";
+      timerEl.classList.remove("warning");
     }
 
     function showQuestion() {
