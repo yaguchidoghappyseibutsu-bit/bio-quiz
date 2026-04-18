@@ -242,7 +242,7 @@
 
   <div class="container">
     <div id="startScreen">
-      <h1>生物クイズバトル</h1>
+      <h1>生物クイズ</h1>
       <p>4択問題に答えてハイスコアを目指そう！</p>
 
       <div class="rules-box">
@@ -489,6 +489,7 @@
       resultScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
       nextBtn.classList.add("hidden");
+      titleBtn.classList.remove("hidden");
       feedbackEl.textContent = "";
       choicesEl.innerHTML = "";
       timerEl.classList.remove("warning");
@@ -501,6 +502,7 @@
       choicesEl.innerHTML = "";
       feedbackEl.textContent = "";
       nextBtn.classList.add("hidden");
+      titleBtn.classList.remove("hidden");
 
       questionNumberEl.textContent = `${currentQuiz + 1} / ${quizData.length}`;
       scoreEl.textContent = `Score: ${score}`;
@@ -566,6 +568,7 @@
       }
 
       scoreEl.textContent = `Score: ${score}`;
+      titleBtn.classList.add("hidden");
       nextBtn.classList.remove("hidden");
     }
 
@@ -583,6 +586,7 @@
       });
 
       feedbackEl.textContent = `時間切れ！ 正解は「${q.choices[q.answer]}」`;
+      titleBtn.classList.add("hidden");
       nextBtn.classList.remove("hidden");
     }
 
