@@ -104,7 +104,7 @@
       margin-top: 16px;
     }
 
-    #nextBtn, #startBtn, #restartBtn, #titleBtn, #resultTitleBtn {
+    #nextBtn, #startBtn, #restartBtn, #reviewBtn, #titleBtn, #resultTitleBtn {
       padding: 12px 20px;
       border: none;
       border-radius: 12px;
@@ -113,7 +113,7 @@
       cursor: pointer;
     }
 
-    #startBtn, #nextBtn, #restartBtn {
+    #startBtn, #nextBtn, #restartBtn, #reviewBtn {
       background: #facc15;
       color: #111827;
     }
@@ -279,6 +279,7 @@
       <div id="result"></div>
       <div class="button-row">
         <button id="restartBtn">もう一度遊ぶ</button>
+        <button id="reviewBtn" class="hidden">間違えた問題に再挑戦</button>
         <button id="resultTitleBtn">タイトルに戻る</button>
       </div>
     </div>
@@ -439,6 +440,8 @@
     ];
 
     let quizData = [];
+    let wrongQuestions = []; // 間違えた問題を保存する配列
+    let isReviewMode = false; // 復習モード中かどうかのフラグ
     let currentQuiz = 0;
     let score = 0;
     let correctCount = 0;
@@ -453,6 +456,7 @@
     const startBtn = document.getElementById("startBtn");
     const nextBtn = document.getElementById("nextBtn");
     const restartBtn = document.getElementById("restartBtn");
+    const reviewBtn = document.getElementById("reviewBtn");
     const titleBtn = document.getElementById("titleBtn");
     const resultTitleBtn = document.getElementById("resultTitleBtn");
 
@@ -468,6 +472,7 @@
     startBtn.addEventListener("click", startGame);
     nextBtn.addEventListener("click", nextQuestion);
     restartBtn.addEventListener("click", restartGame);
+    reviewBtn.addEventListener("click", startReviewGame);
     titleBtn.addEventListener("click", returnToTitle);
     resultTitleBtn.addEventListener("click", returnToTitle);
 
@@ -482,7 +487,23 @@
 
     function startGame() {
       quizData = shuffleArray(originalQuizData);
+      wrongQuestions = [];
+      isReviewMode = false;
       startScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+      quizScreen.classList.remove("hidden");
+      currentQuiz = 0;
+      score = 0;
+      correctCount = 0;
+      clearEffects();
+      showQuestion();
+    }
+
+    function startReviewGame() {
+      // 復習対象（前回間違えた問題）をシャッフルしてセット
+      quizData = shuffleArray(wrongQuestions);
+      wrongQuestions = []; // 次の周回用に一旦クリア
+      isReviewMode = true;
       resultScreen.classList.add("hidden");
       quizScreen.classList.remove("hidden");
       currentQuiz = 0;
@@ -495,6 +516,7 @@
     function returnToTitle() {
       clearInterval(timerId);
       clearEffects();
+      wrongQuestions = [];
       quizScreen.classList.add("hidden");
       resultScreen.classList.add("hidden");
       startScreen.classList.remove("hidden");
@@ -575,6 +597,7 @@
       } else {
         buttons[selected].classList.add("wrong");
         feedbackEl.textContent = `不正解… 正解は「${q.choices[q.answer]}」`;
+        wrongQuestions.push(q); // 不正解の問題を復習リストに追加
       }
 
       scoreEl.textContent = `Score: ${score}`;
@@ -596,6 +619,7 @@
       });
 
       feedbackEl.textContent = `時間切れ！ 正解は「${q.choices[q.answer]}」`;
+      wrongQuestions.push(q); // 時間切れの問題も復習リストに追加
       titleBtn.classList.add("hidden");
       nextBtn.classList.remove("hidden");
     }
@@ -626,11 +650,23 @@
       const rank = getRank();
       const resultClass = rank === "S" ? "rank s-rank" : "rank";
 
+      // 通常モードか復習モードかでタイトル表記を切り替え
+      const modeTitle = isReviewMode ? "【復習リザルト】<br>" : "";
+
       resultEl.innerHTML = `
+        ${modeTitle}
         正解数：${correctCount} / ${quizData.length}<br>
         最終スコア：${score}<br>
         <span class="${resultClass}">ランク：${rank}</span>
       `;
+
+      // 間違えた問題がある場合のみ「復習モード」ボタンを表示
+      if (wrongQuestions.length > 0) {
+        reviewBtn.textContent = `間違えた ${wrongQuestions.length} 問に再挑戦`;
+        reviewBtn.classList.remove("hidden");
+      } else {
+        reviewBtn.classList.add("hidden");
+      }
 
       if (rank === "S") {
         launchCelebration();
